@@ -144,8 +144,12 @@ export async function renderWatermark(
         lines.push(`${data.lat}, ${data.lng}`);
       }
     }
+    if (data.status) {
+      lines.push(data.status.toUpperCase());
+    }
     if (data.location) {
-      lines.push(data.location);
+      const locLines = data.location.split('\n');
+      locLines.forEach(line => lines.push(line));
     }
   } else {
     // Style B: Dark Card
@@ -161,7 +165,14 @@ export async function renderWatermark(
       lines.push(`▶ ${data.status.toUpperCase()}`);
     }
     if (data.location) {
-      lines.push(`📍 ${data.location}`);
+      const locLines = data.location.split('\n');
+      locLines.forEach((line, index) => {
+        if (index === 0) {
+          lines.push(`📍 ${line}`);
+        } else {
+          lines.push(`   ${line}`);
+        }
+      });
     }
     if (showGPS) {
       const coordsText = (decLat !== null && decLng !== null) 

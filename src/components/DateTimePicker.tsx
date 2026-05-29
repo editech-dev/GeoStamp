@@ -185,33 +185,33 @@ export default function DateTimePicker({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-left transition-colors cursor-pointer focus:outline-none focus:border-red-600 ${className}`}
+        className={`w-full flex items-center justify-between bg-input-bg border border-border-main hover:border-text-subtle rounded-xl px-3.5 py-2 text-sm text-left transition-all cursor-pointer focus:outline-none focus:border-red-600 ${className}`}
       >
-        <span className={value ? 'text-slate-200' : 'text-slate-500'}>
+        <span className={value ? 'text-text-main font-medium' : 'text-text-muted'}>
           {value ? formatDisplay(value) : placeholder}
         </span>
-        <CalendarIcon size={16} className="text-slate-400 shrink-0 ml-2" />
+        <CalendarIcon size={16} className="text-text-muted shrink-0 ml-2" />
       </button>
 
       {/* Popover del Calendario */}
       {isOpen && (
-        <div className="absolute left-0 lg:left-auto lg:right-0 mt-2 z-50 w-[290px] bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl p-4 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute left-0 lg:left-auto lg:right-0 mt-2 z-50 w-[290px] bg-card-bg border border-border-main rounded-2xl shadow-2xl p-4 animate-in fade-in slide-in-from-top-1 duration-150">
           {/* Navegación del Mes/Año */}
           <div className="flex items-center justify-between mb-4">
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="p-1.5 hover:bg-slate-900 rounded-lg text-slate-400 hover:text-slate-200 transition-colors"
+              className="p-1.5 hover:bg-panel-active rounded-lg text-text-muted hover:text-text-main transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-sm font-semibold text-slate-200 font-sans">
+            <span className="text-sm font-semibold text-text-main font-sans">
               {MONTHS[month]} {year}
             </span>
             <button
               type="button"
               onClick={handleNextMonth}
-              className="p-1.5 hover:bg-slate-900 rounded-lg text-slate-400 hover:text-slate-200 transition-colors"
+              className="p-1.5 hover:bg-panel-active rounded-lg text-text-muted hover:text-text-main transition-colors"
             >
               <ChevronRight size={16} />
             </button>
@@ -220,7 +220,7 @@ export default function DateTimePicker({
           {/* Días de la Semana */}
           <div className="grid grid-cols-7 gap-1 text-center mb-1">
             {DAYS_OF_WEEK.map((d) => (
-              <span key={d} className="text-[11px] font-bold text-slate-500 uppercase">
+              <span key={d} className="text-[11px] font-bold text-text-muted uppercase">
                 {d}
               </span>
             ))}
@@ -229,9 +229,9 @@ export default function DateTimePicker({
           {/* Cuadrícula del Calendario */}
           <div className="grid grid-cols-7 gap-1 text-center mb-4">
             {cells.map((cell, idx) => {
-              let textClass = 'text-slate-300 hover:bg-slate-900';
+              let textClass = 'text-text-main hover:bg-panel-active';
               if (!cell.isCurrentMonth) {
-                textClass = 'text-slate-600 hover:bg-slate-900/60';
+                textClass = 'text-text-subtle hover:bg-panel-active/60';
               }
               if (cell.isSelected) {
                 textClass = 'bg-red-600 text-white font-semibold hover:bg-red-700';
@@ -251,8 +251,8 @@ export default function DateTimePicker({
           </div>
 
           {/* Selector de Hora y Minutos */}
-          <div className="pt-3 border-t border-slate-900 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5 text-slate-400">
+          <div className="pt-3 border-t border-border-main flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 text-text-muted">
               <Clock size={14} />
               <span className="text-xs font-semibold">Hora</span>
             </div>
@@ -261,7 +261,7 @@ export default function DateTimePicker({
               <select
                 value={value ? currentDate.getHours() : 0}
                 onChange={(e) => handleTimeChange('hours', parseInt(e.target.value))}
-                className="bg-slate-900 border border-slate-800 rounded-lg px-1.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-red-600 font-mono"
+                className="bg-input-bg border border-border-main rounded-lg px-1.5 py-1 text-xs text-text-main focus:outline-none focus:border-red-600 font-mono"
               >
                 {hoursList.map((h) => (
                   <option key={h} value={h}>
@@ -269,11 +269,11 @@ export default function DateTimePicker({
                   </option>
                 ))}
               </select>
-              <span className="text-slate-600 text-xs">:</span>
+              <span className="text-text-muted text-xs">:</span>
               <select
                 value={value ? currentDate.getMinutes() : 0}
                 onChange={(e) => handleTimeChange('minutes', parseInt(e.target.value))}
-                className="bg-slate-900 border border-slate-800 rounded-lg px-1.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-red-600 font-mono"
+                className="bg-input-bg border border-border-main rounded-lg px-1.5 py-1 text-xs text-text-main focus:outline-none focus:border-red-600 font-mono"
               >
                 {minutesList.map((m) => (
                   <option key={m} value={m}>

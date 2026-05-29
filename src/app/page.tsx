@@ -16,7 +16,9 @@ import {
   Eye, 
   Info, 
   RefreshCw,
-  Sparkles
+  Sparkles,
+  Sun,
+  Moon
 } from 'lucide-react';
 import exifr from 'exifr';
 import JSZip from 'jszip';
@@ -88,6 +90,39 @@ function parseInputToDateString(val: string): string {
 export default function Home() {
   // Navigation active tab
   const [activeTab, setActiveTab] = useState<'processor' | 'config'>('processor');
+
+  // Theme state: 'light' | 'dark'
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  // Sync theme with document class and localStorage on mount
+  useEffect(() => {
+    const storedTheme = localStorage.getItem('theme');
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const currentTheme = storedTheme || systemTheme;
+    setTheme(currentTheme as 'light' | 'dark');
+    
+    // Set class on root element
+    if (currentTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    if (newTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
   // App configurations
   const [config, setConfig] = useState<AppConfig>({
@@ -525,41 +560,41 @@ export default function Home() {
     config.textPosition === pos;
 
   return (
-    <div className="flex flex-1 min-h-screen bg-slate-900 text-slate-100 font-sans">
+    <div className="flex flex-1 min-h-screen bg-app-bg text-text-main font-sans transition-colors duration-200">
       
       {/* SIDEBAR NAVIGATION */}
-      <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
-        <div className="p-6 border-b border-slate-800 flex items-center gap-3">
+      <aside className="w-64 bg-sidebar-bg border-r border-border-main flex flex-col shrink-0 transition-colors duration-200">
+        <div className="p-6 border-b border-border-main flex items-center gap-3">
           <div className="bg-red-600 text-white p-2 rounded-lg font-bold shadow-md shadow-red-900/30 flex items-center justify-center">
             <Sparkles size={20} className="text-white" />
           </div>
           <div>
             <h1 className="font-bold text-lg leading-tight tracking-wide">Marca de Agua</h1>
-            <span className="text-xs text-slate-400">Pro Studio (Local)</span>
+            <span className="text-xs text-text-muted">Pro Studio (Local)</span>
           </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          <p className="text-xs font-semibold text-slate-500 uppercase px-3 mb-2 tracking-wider">Principal</p>
+          <p className="text-xs font-semibold text-text-muted/70 uppercase px-3 mb-2 tracking-wider">Principal</p>
           <button 
             onClick={() => setActiveTab('processor')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
               activeTab === 'processor' 
                 ? 'bg-red-600 text-white shadow-md shadow-red-600/10' 
-                : 'text-slate-300 hover:bg-slate-900 hover:text-white'
+                : 'text-text-muted hover:bg-panel-active hover:text-text-main'
             }`}
           >
             <ImageIcon size={18} />
             <span>Procesador de Fotos</span>
           </button>
           
-          <p className="text-xs font-semibold text-slate-500 uppercase px-3 mt-6 mb-2 tracking-wider">Consola Admin</p>
+          <p className="text-xs font-semibold text-text-muted/70 uppercase px-3 mt-6 mb-2 tracking-wider">Consola Admin</p>
           <button 
             onClick={() => setActiveTab('config')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
               activeTab === 'config' 
                 ? 'bg-red-600 text-white shadow-md shadow-red-600/10' 
-                : 'text-slate-300 hover:bg-slate-900 hover:text-white'
+                : 'text-text-muted hover:bg-panel-active hover:text-text-main'
             }`}
           >
             <Settings size={18} />
@@ -567,16 +602,16 @@ export default function Home() {
           </button>
         </nav>
 
-        <div className="p-4 border-t border-slate-800 text-center">
-          <p className="text-xs text-slate-500 leading-normal">
+        <div className="p-4 border-t border-border-main text-center">
+          <p className="text-xs text-text-muted leading-normal">
             Todo el procesamiento ocurre localmente. Ninguna foto se sube a Internet.
           </p>
         </div>
       </aside>
 
       {/* MAIN CONTAINER */}
-      <main className="flex-1 flex flex-col min-w-0 bg-slate-900 overflow-y-auto">
-        <header className="h-20 bg-slate-950 border-b border-slate-800 flex items-center justify-between px-8 shrink-0">
+      <main className="flex-1 flex flex-col min-w-0 bg-app-bg overflow-y-auto transition-colors duration-200">
+        <header className="h-20 bg-header-bg border-b border-border-main flex items-center justify-between px-8 shrink-0 transition-colors duration-200">
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-bold tracking-tight">
               {activeTab === 'processor' ? 'Carga y Edición de Fotos' : 'Ajustes Visuales y Marca de Agua'}
@@ -589,6 +624,14 @@ export default function Home() {
           </div>
           
           <div className="flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 rounded-xl border border-border-main bg-input-bg text-text-muted hover:text-text-main transition-colors cursor-pointer focus:outline-none focus:border-red-600"
+              aria-label="Cambiar tema"
+              title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
             {activeTab === 'processor' && photos.length > 0 && (
               <button
                 onClick={handleProcessAll}
@@ -613,7 +656,7 @@ export default function Home() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 {/* 1. Upload trigger */}
-                <div className="lg:col-span-2 bg-slate-950 border border-slate-800 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-all hover:border-slate-700 relative overflow-hidden group">
+                <div className="lg:col-span-2 bg-card-bg border border-border-main rounded-3xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-all hover:border-text-subtle relative overflow-hidden group">
                   <input 
                     type="file" 
                     multiple 
@@ -622,26 +665,26 @@ export default function Home() {
                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
                   />
                   <div className="flex flex-col items-center text-center p-4">
-                    <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 group-hover:text-red-500 group-hover:border-red-950/50 transition-all duration-300 shadow-inner mb-4">
+                    <div className="w-16 h-16 rounded-2xl bg-input-bg border border-border-main flex items-center justify-center text-text-muted group-hover:text-red-500 group-hover:border-red-950/50 transition-all duration-300 shadow-inner mb-4">
                       <Upload size={28} />
                     </div>
-                    <h3 className="font-semibold text-lg text-slate-200">Subir imágenes para procesar</h3>
-                    <p className="text-sm text-slate-500 mt-1 max-w-sm">
+                    <h3 className="font-semibold text-lg text-text-main">Subir imágenes para procesar</h3>
+                    <p className="text-sm text-text-muted mt-1 max-w-sm">
                       Arrastra tus fotos aquí o haz clic para buscarlas en tu equipo. Soporta carga masiva.
                     </p>
                   </div>
                 </div>
 
                 {/* 2. Global Batch Controls */}
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-4">
+                <div className="bg-card-bg border border-border-main rounded-3xl p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-sm text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                      <Settings size={16} className="text-slate-500" />
+                    <h3 className="font-semibold text-sm text-text-muted uppercase tracking-wider flex items-center gap-2">
+                      <Settings size={16} className="text-text-muted/70" />
                       Valores Rápidos del Lote
                     </h3>
                     <button
                       onClick={handleResetProcessor}
-                      className="text-xs font-semibold text-slate-500 hover:text-red-500 flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="text-xs font-semibold text-text-muted hover:text-red-500 flex items-center gap-1.5 transition-colors cursor-pointer"
                       title="Restablecer todos los valores del procesador (incluyendo fotos)"
                     >
                       <RefreshCw size={12} />
@@ -651,11 +694,11 @@ export default function Home() {
                   
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 mb-1.5">Fase Predeterminada</label>
+                      <label className="block text-xs font-semibold text-text-muted mb-1.5">Fase Predeterminada</label>
                       <select 
                         value={batchStatus} 
                         onChange={(e) => applyBatchStatusToAll(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-red-600 transition-colors"
+                        className="w-full bg-input-bg border border-border-main rounded-xl px-3.5 py-2.5 text-sm text-text-main focus:outline-none focus:border-red-600 transition-colors"
                       >
                         <option value="Antes del Mantenimiento">Antes del Mantenimiento</option>
                         <option value="Durante el Mantenimiento">Durante el Mantenimiento</option>
@@ -665,41 +708,41 @@ export default function Home() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 mb-1.5">Ubicación / Descripción Global</label>
+                      <label className="block text-xs font-semibold text-text-muted mb-1.5">Ubicación / Descripción Global</label>
                       <textarea 
                         value={batchLocation} 
                         placeholder="Ej. CITRA DATACENTER&#10;RACK 05"
                         onChange={(e) => applyBatchLocationToAll(e.target.value)}
                         rows={2}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-red-600 transition-colors resize-y min-h-[68px]"
+                        className="w-full bg-input-bg border border-border-main rounded-xl px-3.5 py-2 text-sm text-text-main focus:outline-none focus:border-red-600 transition-colors resize-y min-h-[68px]"
                       />
                     </div>
                   </div>
 
-                  <p className="text-[11px] text-slate-500 leading-normal">
+                  <p className="text-[11px] text-text-muted leading-normal">
                     * Al modificar estos valores, se aplicarán inmediatamente a todas las fotos que tengas cargadas en la lista inferior.
                   </p>
                 </div>
               </div>
 
               {/* METADATA MODE CONTROL CARD */}
-              <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6">
+              <div className="bg-card-bg border border-border-main rounded-3xl p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                   <div>
-                    <h3 className="font-semibold text-lg text-slate-200">Fecha y Hora de la Marca de Agua</h3>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <h3 className="font-semibold text-lg text-text-main">Fecha y Hora de la Marca de Agua</h3>
+                    <p className="text-sm text-text-muted mt-1">
                       Elige si deseas leer la fecha de la metadata de cada archivo o asignarla tú manualmente en un rango.
                     </p>
                   </div>
                   
                   {/* Selector Mode Toggle */}
-                  <div className="flex bg-slate-900 p-1.5 rounded-2xl border border-slate-800 shrink-0 self-start md:self-center">
+                  <div className="flex bg-input-bg p-1.5 rounded-2xl border border-border-main shrink-0 self-start md:self-center">
                     <button
                       onClick={() => handleToggleMetadata(true)}
                       className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
                         useMetadata 
                           ? 'bg-red-600 text-white shadow-md' 
-                          : 'text-slate-400 hover:text-slate-200'
+                          : 'text-text-muted hover:text-text-main'
                       }`}
                     >
                       Usar Metadata (EXIF)
@@ -709,7 +752,7 @@ export default function Home() {
                       className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
                         !useMetadata 
                           ? 'bg-red-600 text-white shadow-md' 
-                          : 'text-slate-400 hover:text-slate-200'
+                          : 'text-text-muted hover:text-text-main'
                       }`}
                     >
                       Asignar Rango Manual
@@ -719,9 +762,9 @@ export default function Home() {
 
                 {/* Manual date inputs */}
                 {!useMetadata && (
-                  <div className="mt-6 p-5 bg-slate-900/60 border border-slate-800 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                  <div className="mt-6 p-5 bg-input-bg/60 border border-border-main rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 mb-1.5">Fecha y Hora de Inicio (Foto 1)</label>
+                      <label className="block text-xs font-semibold text-text-muted mb-1.5">Fecha y Hora de Inicio (Foto 1)</label>
                       <DateTimePicker 
                         value={startDateRange}
                         onChange={(val) => handleStartDateChange(val)}
@@ -729,16 +772,16 @@ export default function Home() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 mb-1.5">Fecha y Hora de Fin (Foto Final)</label>
+                      <label className="block text-xs font-semibold text-text-muted mb-1.5">Fecha y Hora de Fin (Foto Final)</label>
                       <DateTimePicker 
                         value={endDateRange}
                         onChange={(val) => handleEndDateChange(val)}
                         placeholder="Seleccionar fecha y hora de fin"
                       />
                     </div>
-                    <div className="md:col-span-2 flex items-center justify-between text-xs text-slate-500 pt-2">
+                    <div className="md:col-span-2 flex items-center justify-between text-xs text-text-muted pt-2">
                       <span className="flex items-center gap-1.5">
-                        <Info size={14} className="text-slate-400 shrink-0" />
+                        <Info size={14} className="text-text-muted shrink-0" />
                         Las fechas se calcularán proporcionalmente de inicio a fin según el orden de las fotos.
                       </span>
                       {photos.length > 0 && (
@@ -759,7 +802,7 @@ export default function Home() {
               {photos.length > 0 ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-sm text-slate-400 uppercase tracking-wider">
+                    <h3 className="font-semibold text-sm text-text-muted uppercase tracking-wider">
                       Lista de Fotos ({photos.length}) - Ordena y configura cada una
                     </h3>
                     <button 
@@ -767,7 +810,7 @@ export default function Home() {
                         photos.forEach(p => URL.revokeObjectURL(p.previewUrl));
                         setPhotos([]);
                       }}
-                      className="text-xs font-semibold text-slate-500 hover:text-red-500 flex items-center gap-1 transition-colors"
+                      className="text-xs font-semibold text-text-muted hover:text-red-500 flex items-center gap-1 transition-colors"
                     >
                       <Trash2 size={14} />
                       Limpiar lista
@@ -783,18 +826,18 @@ export default function Home() {
                         onDragEnd={() => setDraggedIndex(null)}
                         onDragOver={handleDragOver}
                         onDrop={() => handleDrop(index)}
-                        className={`bg-slate-950 border rounded-2xl p-4 flex flex-col md:flex-row items-center gap-5 transition-all relative ${
+                        className={`bg-card-bg border rounded-2xl p-4 flex flex-col md:flex-row items-center gap-5 transition-all relative ${
                           draggedIndex === index 
                             ? 'border-red-600 bg-red-950/5 opacity-50 scale-[0.98]' 
-                            : 'border-slate-800 hover:border-slate-700'
+                            : 'border-border-main hover:border-text-subtle'
                         }`}
                       >
                         {/* Drag Handle & Ordering Tools */}
-                        <div className="flex md:flex-col items-center gap-2 shrink-0 text-slate-500">
+                        <div className="flex md:flex-col items-center gap-2 shrink-0 text-text-muted">
                           <button 
                             onClick={() => movePhoto(index, 'up')}
                             disabled={index === 0}
-                            className="p-1.5 bg-slate-900 border border-slate-800 rounded-lg hover:text-white disabled:opacity-30 disabled:hover:text-slate-500 transition-colors"
+                            className="p-1.5 bg-input-bg border border-border-main rounded-lg hover:text-text-main disabled:opacity-30 disabled:hover:text-text-muted transition-colors"
                             title="Subir posición"
                           >
                             <ArrowUp size={14} />
@@ -802,7 +845,7 @@ export default function Home() {
                           
                           {/* Drag visual indicator */}
                           <div 
-                            className="cursor-grab active:cursor-grabbing px-2 py-1 bg-slate-900 border border-slate-800 rounded-lg font-mono text-xs font-bold text-slate-400"
+                            className="cursor-grab active:cursor-grabbing px-2 py-1 bg-input-bg border border-border-main rounded-lg font-mono text-xs font-bold text-text-muted"
                             title="Arrastra para reordenar"
                           >
                             {index + 1}
@@ -811,7 +854,7 @@ export default function Home() {
                           <button 
                             onClick={() => movePhoto(index, 'down')}
                             disabled={index === photos.length - 1}
-                            className="p-1.5 bg-slate-900 border border-slate-800 rounded-lg hover:text-white disabled:opacity-30 disabled:hover:text-slate-500 transition-colors"
+                            className="p-1.5 bg-input-bg border border-border-main rounded-lg hover:text-text-main disabled:opacity-30 disabled:hover:text-text-muted transition-colors"
                             title="Bajar posición"
                           >
                             <ArrowDown size={14} />
@@ -819,7 +862,7 @@ export default function Home() {
                         </div>
 
                         {/* Image Preview Thumbnail */}
-                        <div className="relative w-36 h-24 rounded-lg bg-slate-900 border border-slate-800 overflow-hidden shrink-0 group/img">
+                        <div className="relative w-36 h-24 rounded-lg bg-input-bg border border-border-main overflow-hidden shrink-0 group/img">
                           <img 
                             src={photo.previewUrl} 
                             alt={photo.file.name}
@@ -827,7 +870,7 @@ export default function Home() {
                           />
                           <button
                             onClick={() => handlePreviewPhoto(photo)}
-                            className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover/img:opacity-100 flex items-center justify-center gap-1.5 text-white text-xs font-semibold transition-opacity duration-200"
+                            className="absolute inset-0 bg-card-bg/70 opacity-0 group-hover/img:opacity-100 flex items-center justify-center gap-1.5 text-text-main text-xs font-semibold transition-opacity duration-200"
                           >
                             <Eye size={14} />
                             Ver Previa
@@ -839,25 +882,25 @@ export default function Home() {
                           
                           {/* File Details */}
                           <div className="space-y-1">
-                            <span className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Nombre del Archivo</span>
-                            <p className="text-sm font-semibold text-slate-300 truncate max-w-[200px]" title={photo.file.name}>
+                            <span className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider">Nombre del Archivo</span>
+                            <p className="text-sm font-semibold text-text-main truncate max-w-[200px]" title={photo.file.name}>
                               {photo.file.name}
                             </p>
-                            <span className="block text-[11px] text-slate-500">
+                            <span className="block text-[11px] text-text-muted">
                               {(photo.file.size / (1024 * 1024)).toFixed(2)} MB
                             </span>
                           </div>
 
                           {/* Phase/Status */}
                           <div>
-                            <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Estado / Grupo</label>
+                            <label className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1">Estado / Grupo</label>
                             <select 
                               value={photo.status}
                               onChange={(e) => {
                                 const val = e.target.value;
                                 setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, status: val } : p));
                               }}
-                              className="w-full bg-slate-900 border border-slate-850 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-red-600 transition-colors"
+                              className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors"
                             >
                               <option value="Antes del Mantenimiento">Antes del Mantenimiento</option>
                               <option value="Durante el Mantenimiento">Durante el Mantenimiento</option>
@@ -868,7 +911,7 @@ export default function Home() {
 
                           {/* Location details */}
                           <div>
-                            <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Locación / Detalles</label>
+                            <label className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1">Locación / Detalles</label>
                             <textarea 
                               value={photo.location}
                               placeholder="Ubicación"
@@ -877,20 +920,20 @@ export default function Home() {
                                 setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, location: val } : p));
                               }}
                               rows={2}
-                              className="w-full bg-slate-900 border border-slate-850 rounded-xl px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-red-600 transition-colors resize-y min-h-[46px] leading-normal"
+                              className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors resize-y min-h-[46px] leading-normal"
                             />
                           </div>
 
                           {/* Date and Time */}
                           <div>
-                            <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1 flex justify-between">
+                            <label className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1 flex justify-between">
                               <span>Fecha y Hora</span>
                               {photo.date !== photo.originalMetadata.date && (
                                 <button
                                   onClick={() => {
                                     setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, date: p.originalMetadata.date } : p));
                                   }}
-                                  className="text-[10px] text-slate-500 hover:text-red-500 font-bold transition-colors"
+                                  className="text-[10px] text-text-muted hover:text-red-500 font-bold transition-colors"
                                   title="Restaurar metadata EXIF"
                                 >
                                   Reset
@@ -903,7 +946,7 @@ export default function Home() {
                                 const formattedVal = parseInputToDateString(val);
                                 setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, date: formattedVal } : p));
                               }}
-                              className="!px-2.5 !py-1.5 !text-xs !bg-slate-900 border-slate-850"
+                              className="!px-2.5 !py-1.5 !text-xs !bg-input-bg border-border-subtle"
                               placeholder="Fecha"
                             />
                           </div>
@@ -913,7 +956,7 @@ export default function Home() {
                         {/* GPS Coords inputs */}
                         <div className="flex flex-row md:flex-col gap-2 shrink-0 w-full md:w-36">
                           <div className="w-1/2 md:w-full">
-                            <label className="block text-[9px] font-semibold text-slate-500 uppercase mb-0.5">Latitud</label>
+                            <label className="block text-[9px] font-semibold text-text-muted uppercase mb-0.5">Latitud</label>
                             <input 
                               type="text"
                               value={photo.lat}
@@ -922,11 +965,11 @@ export default function Home() {
                                 const val = e.target.value;
                                 setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, lat: val } : p));
                               }}
-                              className="w-full bg-slate-900 border border-slate-850 rounded-xl px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-red-600 transition-colors"
+                              className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors"
                             />
                           </div>
                           <div className="w-1/2 md:w-full">
-                            <label className="block text-[9px] font-semibold text-slate-500 uppercase mb-0.5">Longitud</label>
+                            <label className="block text-[9px] font-semibold text-text-muted uppercase mb-0.5">Longitud</label>
                             <input 
                               type="text"
                               value={photo.lng}
@@ -935,7 +978,7 @@ export default function Home() {
                                 const val = e.target.value;
                                 setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, lng: val } : p));
                               }}
-                              className="w-full bg-slate-900 border border-slate-850 rounded-xl px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-red-600 transition-colors"
+                              className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors"
                             />
                           </div>
                         </div>
@@ -943,7 +986,7 @@ export default function Home() {
                         {/* Delete action */}
                         <button
                           onClick={() => deletePhoto(photo.id, photo.previewUrl)}
-                          className="p-2.5 bg-slate-900 border border-slate-800 hover:border-red-950 text-slate-400 hover:text-red-500 rounded-xl shrink-0 transition-colors"
+                          className="p-2.5 bg-input-bg border border-border-main hover:border-red-950 text-text-muted hover:text-red-500 rounded-xl shrink-0 transition-colors cursor-pointer"
                           title="Eliminar foto"
                         >
                           <Trash2 size={16} />
@@ -954,10 +997,10 @@ export default function Home() {
                   </div>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center py-20 text-center bg-slate-950/40 border border-dashed border-slate-800 rounded-3xl">
-                  <ImageIcon className="text-slate-700 w-16 h-16 mb-4" />
-                  <h4 className="font-semibold text-slate-300 text-base">La cola de fotos está vacía</h4>
-                  <p className="text-sm text-slate-500 max-w-xs mt-1">
+                <div className="flex-1 flex flex-col items-center justify-center py-20 text-center bg-card-bg/40 border border-dashed border-border-main rounded-3xl">
+                  <ImageIcon className="text-text-muted/40 w-16 h-16 mb-4" />
+                  <h4 className="font-semibold text-text-muted text-base">La cola de fotos está vacía</h4>
+                  <p className="text-sm text-text-muted max-w-xs mt-1">
                     Sube fotos arriba para comenzar a reordenarlas y aplicarles la marca de agua.
                   </p>
                 </div>
@@ -974,50 +1017,50 @@ export default function Home() {
               <div className="lg:col-span-2 space-y-8">
                 
                 {/* 1. Main Texts & Toggles */}
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-6">
-                  <h3 className="font-semibold text-lg text-slate-200 border-b border-slate-800 pb-3 flex items-center gap-2">
+                <div className="bg-card-bg border border-border-main rounded-3xl p-6 space-y-6">
+                  <h3 className="font-semibold text-lg text-text-main border-b border-border-main pb-3 flex items-center gap-2">
                     <ImageIcon size={18} className="text-red-500" />
                     Texto de Marca de Agua
                   </h3>
                   
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                      <label className="block text-xs font-semibold text-text-muted mb-1.5">
                         Texto Empresarial / Organización
                       </label>
                       <input 
                         type="text" 
                         value={config.companyName}
                         onChange={(e) => handleSaveConfig({ ...config, companyName: e.target.value })}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-red-600 transition-colors font-medium"
+                        className="w-full bg-input-bg border border-border-main rounded-xl px-4 py-3 text-sm text-text-main focus:outline-none focus:border-red-600 transition-colors font-medium"
                         placeholder="UNION ELÉCTRICA"
                       />
                     </div>
 
                     <div className="pt-2 space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-slate-900/60 rounded-2xl border border-slate-850">
+                      <div className="flex items-center justify-between p-3 bg-input-bg/60 rounded-2xl border border-border-subtle">
                         <div>
-                          <label className="text-sm font-semibold text-slate-300 block">Mostrar Coordenadas GPS</label>
-                          <span className="text-xs text-slate-550">Ubicación geográfica en la foto</span>
+                          <label className="text-sm font-semibold text-text-main block">Mostrar Coordenadas GPS</label>
+                          <span className="text-xs text-text-muted">Ubicación geográfica en la foto</span>
                         </div>
                         <input 
                           type="checkbox"
                           checked={config.showGPS}
                           onChange={(e) => handleSaveConfig({ ...config, showGPS: e.target.checked })}
-                          className="w-10 h-5 bg-slate-950 border-slate-800 checked:bg-red-600 checked:border-red-600 rounded-full appearance-none relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-slate-400 checked:before:bg-white before:rounded-full before:top-[2px] before:left-[2px] checked:before:left-[22px] before:transition-all transition-colors duration-200"
+                          className="w-10 h-5 bg-card-bg border border-border-main checked:bg-red-600 checked:border-red-600 rounded-full appearance-none relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-text-subtle checked:before:bg-white before:rounded-full before:top-[2px] before:left-[2px] checked:before:left-[22px] before:transition-all transition-colors duration-200"
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 bg-slate-900/60 rounded-2xl border border-slate-850">
+                      <div className="flex items-center justify-between p-3 bg-input-bg/60 rounded-2xl border border-border-subtle">
                         <div>
-                          <label className="text-sm font-semibold text-slate-300 block">Mostrar Fecha y Hora</label>
-                          <span className="text-xs text-slate-550">Timestamp de captura</span>
+                          <label className="text-sm font-semibold text-text-main block">Mostrar Fecha y Hora</label>
+                          <span className="text-xs text-text-muted">Timestamp de captura</span>
                         </div>
                         <input 
                           type="checkbox"
                           checked={config.showDateTime}
                           onChange={(e) => handleSaveConfig({ ...config, showDateTime: e.target.checked })}
-                          className="w-10 h-5 bg-slate-950 border-slate-800 checked:bg-red-600 checked:border-red-600 rounded-full appearance-none relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-slate-400 checked:before:bg-white before:rounded-full before:top-[2px] before:left-[2px] checked:before:left-[22px] before:transition-all transition-colors duration-200"
+                          className="w-10 h-5 bg-card-bg border border-border-main checked:bg-red-600 checked:border-red-600 rounded-full appearance-none relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-text-subtle checked:before:bg-white before:rounded-full before:top-[2px] before:left-[2px] checked:before:left-[22px] before:transition-all transition-colors duration-200"
                         />
                       </div>
                     </div>
@@ -1025,8 +1068,8 @@ export default function Home() {
                 </div>
 
                 {/* 2. Position Visual Matrices */}
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-6">
-                  <h3 className="font-semibold text-lg text-slate-200 border-b border-slate-800 pb-3 flex items-center gap-2">
+                <div className="bg-card-bg border border-border-main rounded-3xl p-6 space-y-6">
+                  <h3 className="font-semibold text-lg text-text-main border-b border-border-main pb-3 flex items-center gap-2">
                     <MapPin size={18} className="text-red-500" />
                     Posición de los Elementos
                   </h3>
@@ -1035,27 +1078,27 @@ export default function Home() {
                     
                     {/* Logo Position Selector */}
                     <div className="space-y-3">
-                      <label className="block text-sm font-semibold text-slate-300">Posición del Logo</label>
-                      <div className="aspect-[4/3] bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between relative">
+                      <label className="block text-sm font-semibold text-text-main">Posición del Logo</label>
+                      <div className="aspect-[4/3] bg-input-bg border border-border-main rounded-2xl p-4 flex flex-col justify-between relative">
                         
                         {/* Top corner options */}
                         <div className="flex justify-between w-full">
                           <button
                             onClick={() => handleSaveConfig({ ...config, logoPosition: 'top-left' })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer ${
                               isLogoPos('top-left') 
                                 ? 'bg-red-600 text-white border border-red-500 scale-105' 
-                                : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-slate-200'
+                                : 'bg-card-bg border border-border-subtle text-text-muted hover:text-text-main'
                             }`}
                           >
                             S.Izq
                           </button>
                           <button
                             onClick={() => handleSaveConfig({ ...config, logoPosition: 'top-right' })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer ${
                               isLogoPos('top-right') 
                                 ? 'bg-red-600 text-white border border-red-500 scale-105' 
-                                : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-slate-200'
+                                : 'bg-card-bg border border-border-subtle text-text-muted hover:text-text-main'
                             }`}
                           >
                             S.Der
@@ -1064,27 +1107,27 @@ export default function Home() {
 
                         {/* Decorative Center Camera Icon */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10">
-                          <ImageIcon size={64} className="text-slate-400" />
+                          <ImageIcon size={64} className="text-text-muted" />
                         </div>
 
                         {/* Bottom corner options */}
                         <div className="flex justify-between w-full">
                           <button
                             onClick={() => handleSaveConfig({ ...config, logoPosition: 'bottom-left' })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer ${
                               isLogoPos('bottom-left') 
                                 ? 'bg-red-600 text-white border border-red-500 scale-105' 
-                                : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-slate-200'
+                                : 'bg-card-bg border border-border-subtle text-text-muted hover:text-text-main'
                             }`}
                           >
                             I.Izq
                           </button>
                           <button
                             onClick={() => handleSaveConfig({ ...config, logoPosition: 'bottom-right' })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer ${
                               isLogoPos('bottom-right') 
                                 ? 'bg-red-600 text-white border border-red-500 scale-105' 
-                                : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-slate-200'
+                                : 'bg-card-bg border border-border-subtle text-text-muted hover:text-text-main'
                             }`}
                           >
                             I.Der
@@ -1096,27 +1139,27 @@ export default function Home() {
 
                     {/* Text Position Selector */}
                     <div className="space-y-3">
-                      <label className="block text-sm font-semibold text-slate-300">Posición del Texto</label>
-                      <div className="aspect-[4/3] bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between relative">
+                      <label className="block text-sm font-semibold text-text-main">Posición del Texto</label>
+                      <div className="aspect-[4/3] bg-input-bg border border-border-main rounded-2xl p-4 flex flex-col justify-between relative">
                         
                         {/* Top corner options */}
                         <div className="flex justify-between w-full">
                           <button
                             onClick={() => handleSaveConfig({ ...config, textPosition: 'top-left' })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer ${
                               isTextPos('top-left') 
                                 ? 'bg-red-600 text-white border border-red-500 scale-105' 
-                                : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-slate-200'
+                                : 'bg-card-bg border border-border-subtle text-text-muted hover:text-text-main'
                             }`}
                           >
                             S.Izq
                           </button>
                           <button
                             onClick={() => handleSaveConfig({ ...config, textPosition: 'top-right' })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer ${
                               isTextPos('top-right') 
                                 ? 'bg-red-600 text-white border border-red-500 scale-105' 
-                                : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-slate-200'
+                                : 'bg-card-bg border border-border-subtle text-text-muted hover:text-text-main'
                             }`}
                           >
                             S.Der
@@ -1125,27 +1168,27 @@ export default function Home() {
 
                         {/* Decorative Center Icon */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-10">
-                          <ImageIcon size={64} className="text-slate-400" />
+                          <ImageIcon size={64} className="text-text-muted" />
                         </div>
 
                         {/* Bottom corner options */}
                         <div className="flex justify-between w-full">
                           <button
                             onClick={() => handleSaveConfig({ ...config, textPosition: 'bottom-left' })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer ${
                               isTextPos('bottom-left') 
                                 ? 'bg-red-600 text-white border border-red-500 scale-105' 
-                                : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-slate-200'
+                                : 'bg-card-bg border border-border-subtle text-text-muted hover:text-text-main'
                             }`}
                           >
                             I.Izq
                           </button>
                           <button
                             onClick={() => handleSaveConfig({ ...config, textPosition: 'bottom-right' })}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer ${
                               isTextPos('bottom-right') 
                                 ? 'bg-red-600 text-white border border-red-500 scale-105' 
-                                : 'bg-slate-950 border border-slate-850 text-slate-400 hover:text-slate-200'
+                                : 'bg-card-bg border border-border-subtle text-text-muted hover:text-text-main'
                             }`}
                           >
                             I.Der
@@ -1159,8 +1202,8 @@ export default function Home() {
                 </div>
 
                 {/* 3. Watermark Size */}
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-6">
-                  <h3 className="font-semibold text-lg text-slate-200 border-b border-slate-800 pb-3">
+                <div className="bg-card-bg border border-border-main rounded-3xl p-6 space-y-6">
+                  <h3 className="font-semibold text-lg text-text-main border-b border-border-main pb-3">
                     Tamaño de Marca de Agua
                   </h3>
                   
@@ -1172,10 +1215,10 @@ export default function Home() {
                         <button
                           key={size}
                           onClick={() => handleSaveConfig({ ...config, watermarkSize: size })}
-                          className={`flex flex-col items-center justify-center p-5 rounded-2xl border text-center transition-all ${
+                          className={`flex flex-col items-center justify-center p-5 rounded-2xl border text-center transition-all cursor-pointer ${
                             isSelected
-                              ? 'bg-red-950/20 border-red-600 text-white'
-                              : 'bg-slate-900 border-slate-850 text-slate-400 hover:text-slate-300'
+                              ? 'bg-accent-bg border-red-600 text-accent-text font-bold scale-[1.02]'
+                              : 'bg-input-bg border-border-subtle text-text-muted hover:text-text-main hover:border-border-main'
                           }`}
                         >
                           <span className={`font-bold transition-all ${
@@ -1189,8 +1232,8 @@ export default function Home() {
                 </div>
 
                 {/* 4. Style selector */}
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-6">
-                  <h3 className="font-semibold text-lg text-slate-200 border-b border-slate-800 pb-3">
+                <div className="bg-card-bg border border-border-main rounded-3xl p-6 space-y-6">
+                  <h3 className="font-semibold text-lg text-text-main border-b border-border-main pb-3">
                     Estilo de Diseño
                   </h3>
 
@@ -1199,14 +1242,14 @@ export default function Home() {
                     {/* Style A Option */}
                     <button
                       onClick={() => handleSaveConfig({ ...config, watermarkStyle: 'plain' })}
-                      className={`p-5 rounded-2xl border text-left space-y-3 transition-all ${
+                      className={`p-5 rounded-2xl border text-left space-y-3 transition-all cursor-pointer ${
                         config.watermarkStyle === 'plain'
-                          ? 'bg-red-950/20 border-red-600 text-white'
-                          : 'bg-slate-900 border-slate-850 text-slate-400 hover:text-slate-300 hover:border-slate-800'
+                          ? 'bg-accent-bg border-red-600 text-accent-text font-bold scale-[1.01]'
+                          : 'bg-input-bg border-border-subtle text-text-muted hover:text-text-main hover:border-border-main'
                       }`}
                     >
                       <h4 className="font-bold text-sm">Estilo A: Texto Sencillo</h4>
-                      <p className="text-xs text-slate-500 leading-normal">
+                      <p className="text-xs text-text-muted leading-normal">
                         Texto blanco sin contenedor con una sombra paralela negra. Formato en DMS de coordenadas GPS (ej. 11.08.53.jpeg).
                       </p>
                     </button>
@@ -1214,14 +1257,14 @@ export default function Home() {
                     {/* Style B Option */}
                     <button
                       onClick={() => handleSaveConfig({ ...config, watermarkStyle: 'card' })}
-                      className={`p-5 rounded-2xl border text-left space-y-3 transition-all ${
+                      className={`p-5 rounded-2xl border text-left space-y-3 transition-all cursor-pointer ${
                         config.watermarkStyle === 'card'
-                          ? 'bg-red-950/20 border-red-600 text-white'
-                          : 'bg-slate-900 border-slate-850 text-slate-400 hover:text-slate-300 hover:border-slate-800'
+                          ? 'bg-accent-bg border-red-600 text-accent-text font-bold scale-[1.01]'
+                          : 'bg-input-bg border-border-subtle text-text-muted hover:text-text-main hover:border-border-main'
                       }`}
                     >
                       <h4 className="font-bold text-sm">Estilo B: Tarjeta Oscura</h4>
-                      <p className="text-xs text-slate-500 leading-normal">
+                      <p className="text-xs text-text-muted leading-normal">
                         Caja gris oscura con un borde decorativo amarillo a la izquierda e iconos dedicados (▶, 📍, 🌐, 📅) (ej. 11.08.54 AM (1).jpeg).
                       </p>
                     </button>
@@ -1233,13 +1276,13 @@ export default function Home() {
 
               {/* Right Panel - Logos Management */}
               <div className="space-y-8">
-                <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-6">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h3 className="font-semibold text-lg text-slate-200 flex items-center gap-2">
+                <div className="bg-card-bg border border-border-main rounded-3xl p-6 space-y-6">
+                  <div className="flex items-center justify-between border-b border-border-main pb-3">
+                    <h3 className="font-semibold text-lg text-text-main flex items-center gap-2">
                       <Plus size={18} className="text-red-500" />
                       Logos Asociados
                     </h3>
-                    <div className="relative cursor-pointer bg-slate-900 hover:bg-slate-800 text-slate-300 p-2 rounded-xl border border-slate-800 transition-colors">
+                    <div className="relative cursor-pointer bg-input-bg hover:bg-panel-active text-text-main p-2 rounded-xl border border-border-main transition-colors">
                       <input 
                         type="file" 
                         accept="image/*"
@@ -1258,10 +1301,10 @@ export default function Home() {
                           <div
                             key={logo.id}
                             onClick={() => handleSaveConfig({ ...config, activeLogoId: logo.id })}
-                            className={`group relative aspect-square bg-slate-900 rounded-2xl border p-4 flex flex-col items-center justify-center cursor-pointer transition-all ${
+                            className={`group relative aspect-square bg-input-bg rounded-2xl border p-4 flex flex-col items-center justify-center cursor-pointer transition-all ${
                               isSelected
-                                ? 'border-red-600 bg-red-950/5'
-                                : 'border-slate-850 hover:border-slate-800'
+                                ? 'border-red-600 bg-red-500/5'
+                                : 'border-border-subtle hover:border-border-main'
                             }`}
                           >
                             <img 
@@ -1270,7 +1313,7 @@ export default function Home() {
                               className="max-w-full max-h-[70%] object-contain"
                             />
                             
-                            <span className="text-[10px] text-slate-500 mt-2 truncate w-full text-center px-1">
+                            <span className="text-[10px] text-text-muted mt-2 truncate w-full text-center px-1">
                               {logo.name}
                             </span>
 
@@ -1284,7 +1327,7 @@ export default function Home() {
                             {/* Delete button */}
                             <button
                               onClick={(e) => handleDeleteLogo(logo.id, e)}
-                              className="absolute top-2 left-2 p-1.5 bg-slate-950 border border-slate-800 text-slate-500 hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 left-2 p-1.5 bg-card-bg border border-border-main text-text-muted hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                               title="Eliminar logo"
                             >
                               <Trash2 size={10} />
@@ -1294,9 +1337,9 @@ export default function Home() {
                       })}
                     </div>
                   ) : (
-                    <div className="border border-dashed border-slate-850 rounded-2xl py-10 px-4 text-center">
-                      <ImageIcon className="text-slate-800 w-10 h-10 mx-auto mb-2" />
-                      <p className="text-xs text-slate-500">
+                    <div className="border border-dashed border-border-subtle rounded-2xl py-10 px-4 text-center">
+                      <ImageIcon className="text-text-muted/40 w-10 h-10 mx-auto mb-2" />
+                      <p className="text-xs text-text-muted">
                         No hay logotipos guardados. Presiona el botón + arriba para agregar uno.
                       </p>
                     </div>
@@ -1312,44 +1355,44 @@ export default function Home() {
 
       {/* PREVIEW MODAL */}
       {previewPhoto && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-6 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-4xl flex flex-col max-h-[90vh] overflow-hidden shadow-2xl relative">
-            <header className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-950">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+          <div className="bg-card-bg border border-border-main rounded-3xl w-full max-w-4xl flex flex-col max-h-[90vh] overflow-hidden shadow-2xl relative">
+            <header className="px-6 py-4 border-b border-border-main flex justify-between items-center bg-card-bg">
               <div>
-                <h3 className="font-bold text-slate-200">Previsualización de Marca de Agua</h3>
-                <p className="text-xs text-slate-550 truncate max-w-[400px]">
+                <h3 className="font-bold text-text-main">Previsualización de Marca de Agua</h3>
+                <p className="text-xs text-text-muted truncate max-w-[400px]">
                   {previewPhoto.file.name}
                 </p>
               </div>
               <button 
                 onClick={closePreview}
-                className="text-xs bg-slate-900 hover:bg-slate-850 text-slate-400 px-3 py-1.5 rounded-lg border border-slate-800 transition-colors"
+                className="text-xs bg-input-bg hover:bg-panel-active text-text-muted px-3 py-1.5 rounded-lg border border-border-main transition-colors cursor-pointer"
               >
                 Cerrar
               </button>
             </header>
 
-            <div className="flex-1 bg-slate-950 p-6 flex items-center justify-center min-h-[300px] overflow-auto">
+            <div className="flex-1 bg-app-bg p-6 flex items-center justify-center min-h-[300px] overflow-auto">
               {isPreviewLoading ? (
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-10 h-10 border-4 border-red-600/30 border-t-red-600 rounded-full animate-spin"></div>
-                  <span className="text-xs text-slate-450 font-medium">Generando marca de agua en Canvas...</span>
+                  <span className="text-xs text-text-muted font-medium">Generando marca de agua en Canvas...</span>
                 </div>
               ) : (
                 previewImageSrc && (
                   <img 
                     src={previewImageSrc} 
                     alt="Watermark preview"
-                    className="max-w-full max-h-[60vh] object-contain rounded-xl border border-slate-800 shadow-lg"
+                    className="max-w-full max-h-[60vh] object-contain rounded-xl border border-border-main shadow-lg"
                   />
                 )
               )}
             </div>
 
-            <footer className="px-6 py-4 border-t border-slate-800 flex justify-end gap-3 bg-slate-950">
+            <footer className="px-6 py-4 border-t border-border-main flex justify-end gap-3 bg-card-bg">
               <button 
                 onClick={closePreview}
-                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-850 text-slate-300 rounded-xl border border-slate-800 text-sm font-semibold transition-colors"
+                className="px-5 py-2.5 bg-input-bg hover:bg-panel-active text-text-main rounded-xl border border-border-main text-sm font-semibold transition-colors cursor-pointer"
               >
                 Cerrar
               </button>
@@ -1360,8 +1403,8 @@ export default function Home() {
 
       {/* BATCH PROCESSING PROGRESS MODAL */}
       {isProcessing && (
-        <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-6 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-md p-8 flex flex-col items-center text-center shadow-2xl space-y-6">
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center p-6 z-50">
+          <div className="bg-card-bg border border-border-main rounded-3xl w-full max-w-md p-8 flex flex-col items-center text-center shadow-2xl space-y-6">
             <div className="relative flex items-center justify-center">
               {/* Spinning outer circle */}
               <div className="w-20 h-20 border-4 border-red-600/20 border-t-red-600 rounded-full animate-spin"></div>
@@ -1372,21 +1415,21 @@ export default function Home() {
             </div>
 
             <div className="space-y-2">
-              <h3 className="font-bold text-lg text-slate-200">Procesando lote de fotos</h3>
-              <p className="text-xs text-slate-450 leading-relaxed font-mono max-w-xs truncate">
+              <h3 className="font-bold text-lg text-text-main">Procesando lote de fotos</h3>
+              <p className="text-xs text-text-muted leading-relaxed font-mono max-w-xs truncate">
                 {processingMessage}
               </p>
             </div>
 
             {/* Progress bar container */}
-            <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-850">
+            <div className="w-full bg-input-bg h-2 rounded-full overflow-hidden border border-border-subtle">
               <div 
                 className="bg-red-600 h-full transition-all duration-300 shadow-md shadow-red-500/50"
                 style={{ width: `${processingProgress}%` }}
               ></div>
             </div>
             
-            <p className="text-[10px] text-slate-550 leading-normal">
+            <p className="text-[10px] text-text-muted leading-normal">
               Por favor, no cierres esta pestaña. Las imágenes se están combinando usando tu CPU local.
             </p>
           </div>

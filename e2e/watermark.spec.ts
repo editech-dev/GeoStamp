@@ -44,7 +44,7 @@ test.describe('Watermark Application E2E Tests', () => {
     await page.goto('/');
     
     // Check sidebar header
-    await expect(page.locator('aside')).toContainText('Marca de Agua');
+    await expect(page.locator('aside')).toContainText('GeoStamp Pro');
     await expect(page.getByRole('button', { name: 'Procesador de Fotos' })).toBeVisible();
 
     // 2. Upload a test photo
@@ -57,7 +57,7 @@ test.describe('Watermark Application E2E Tests', () => {
     await expect(photoQueue).toContainText('WhatsApp Image 2026-05-28 at 11.08.54 AM.jpeg');
 
     // 3. Edit batch location and status
-    const batchLocationInput = page.getByPlaceholder('Ej. CITRA DATACENTER › RACK 05');
+    const batchLocationInput = page.getByPlaceholder(/Ej\. CITRA DATACENTER/);
     await batchLocationInput.fill('EDIFICIO PRINCIPAL PISO 3');
     
     const batchStatusSelect = page.locator('select').first();
@@ -65,27 +65,33 @@ test.describe('Watermark Application E2E Tests', () => {
 
     // Verify the photo card in the queue is updated with batch status and location
     const photoCard = page.locator('div.grid.grid-cols-1.gap-4').first().locator('> div').first();
-    await expect(photoCard.locator('input[value="EDIFICIO PRINCIPAL PISO 3"]')).toBeVisible();
+    await expect(photoCard.locator('textarea')).toHaveValue('EDIFICIO PRINCIPAL PISO 3');
     await expect(photoCard.locator('select')).toHaveValue('Durante el Mantenimiento');
 
     // 4. Toggle Manual Date Range Interpolation
     // Toggle manual range mode
     await page.getByRole('button', { name: 'Asignar Rango Manual' }).click();
 
-    // Fill manual start and end date ranges
-    // For 'datetime-local' inputs, Playwright fill expects 'YYYY-MM-DDTHH:mm' format
-    const startDateInput = page.locator('input[type="datetime-local"]').first();
-    await startDateInput.fill('2026-05-28T08:00');
+    // Interact with custom start DateTimePicker
+    await page.getByRole('button', { name: 'Seleccionar fecha y hora de inicio' }).click();
+    await page.locator('div.absolute').getByRole('button', { name: '28', exact: true }).last().click();
+    await page.locator('div.absolute').locator('select').first().selectOption('8');
+    await page.locator('div.absolute').locator('select').nth(1).selectOption('0');
+    await page.locator('div.absolute').getByRole('button', { name: 'Aplicar' }).click();
 
-    const endDateInput = page.locator('input[type="datetime-local"]').nth(1);
-    await endDateInput.fill('2026-05-28T17:00');
+    // Interact with custom end DateTimePicker
+    await page.getByRole('button', { name: 'Seleccionar fecha y hora de fin' }).click();
+    await page.locator('div.absolute').getByRole('button', { name: '28', exact: true }).last().click();
+    await page.locator('div.absolute').locator('select').first().selectOption('17');
+    await page.locator('div.absolute').locator('select').nth(1).selectOption('0');
+    await page.locator('div.absolute').getByRole('button', { name: 'Aplicar' }).click();
 
     // Trigger recalculation if needed or wait for auto-update
     await page.getByRole('button', { name: 'Recalcular Ahora' }).click();
 
     // Verify that the photo's date in the queue has changed to the start date (since there's only 1 photo)
-    const photoDateInput = photoCard.locator('input[type="datetime-local"]');
-    await expect(photoDateInput).toHaveValue('2026-05-28T08:00');
+    const photoDateButton = photoCard.locator('button').filter({ hasText: /\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/ });
+    await expect(photoDateButton).toContainText('28/05/2026 08:00');
 
     // 5. Navigate to "Configuración Visual" Tab and adjust settings
     await page.getByRole('button', { name: 'Configuración Visual' }).click();

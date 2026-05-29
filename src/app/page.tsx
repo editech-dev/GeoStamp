@@ -32,6 +32,7 @@ import {
 import { 
   renderWatermark 
 } from '../utils/watermark';
+import DateTimePicker from '../components/DateTimePicker';
 
 // Photo interface for the upload queue
 interface PhotoItem {
@@ -394,6 +395,16 @@ export default function Home() {
     setPhotos(prev => prev.map(p => ({ ...p, location: locVal })));
   };
 
+  const handleResetProcessor = () => {
+    photos.forEach(photo => URL.revokeObjectURL(photo.previewUrl));
+    setPhotos([]);
+    setBatchStatus('Antes del Mantenimiento');
+    setBatchLocation('');
+    setStartDateRange('');
+    setEndDateRange('');
+    setUseMetadata(true);
+  };
+
   // Single Photo Watermark Preview
   const handlePreviewPhoto = async (photo: PhotoItem) => {
     setPreviewPhoto(photo);
@@ -623,10 +634,20 @@ export default function Home() {
 
                 {/* 2. Global Batch Controls */}
                 <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 space-y-4">
-                  <h3 className="font-semibold text-sm text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                    <Settings size={16} className="text-slate-500" />
-                    Valores Rápidos del Lote
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                      <Settings size={16} className="text-slate-500" />
+                      Valores Rápidos del Lote
+                    </h3>
+                    <button
+                      onClick={handleResetProcessor}
+                      className="text-xs font-semibold text-slate-500 hover:text-red-500 flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title="Restablecer todos los valores del procesador (incluyendo fotos)"
+                    >
+                      <RefreshCw size={12} />
+                      Limpiar Procesador
+                    </button>
+                  </div>
                   
                   <div className="space-y-3">
                     <div>
@@ -645,12 +666,12 @@ export default function Home() {
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-400 mb-1.5">Ubicación / Descripción Global</label>
-                      <input 
-                        type="text" 
+                      <textarea 
                         value={batchLocation} 
-                        placeholder="Ej. CITRA DATACENTER › RACK 05"
+                        placeholder="Ej. CITRA DATACENTER&#10;RACK 05"
                         onChange={(e) => applyBatchLocationToAll(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-red-600 transition-colors"
+                        rows={2}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none focus:border-red-600 transition-colors resize-y min-h-[68px]"
                       />
                     </div>
                   </div>
@@ -701,20 +722,18 @@ export default function Home() {
                   <div className="mt-6 p-5 bg-slate-900/60 border border-slate-800 rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div>
                       <label className="block text-xs font-semibold text-slate-400 mb-1.5">Fecha y Hora de Inicio (Foto 1)</label>
-                      <input 
-                        type="datetime-local" 
+                      <DateTimePicker 
                         value={startDateRange}
-                        onChange={(e) => handleStartDateChange(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-red-600 transition-colors"
+                        onChange={(val) => handleStartDateChange(val)}
+                        placeholder="Seleccionar fecha y hora de inicio"
                       />
                     </div>
                     <div>
                       <label className="block text-xs font-semibold text-slate-400 mb-1.5">Fecha y Hora de Fin (Foto Final)</label>
-                      <input 
-                        type="datetime-local" 
+                      <DateTimePicker 
                         value={endDateRange}
-                        onChange={(e) => handleEndDateChange(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-red-600 transition-colors"
+                        onChange={(val) => handleEndDateChange(val)}
+                        placeholder="Seleccionar fecha y hora de fin"
                       />
                     </div>
                     <div className="md:col-span-2 flex items-center justify-between text-xs text-slate-500 pt-2">
@@ -761,6 +780,7 @@ export default function Home() {
                         key={photo.id}
                         draggable
                         onDragStart={() => handleDragStart(index)}
+                        onDragEnd={() => setDraggedIndex(null)}
                         onDragOver={handleDragOver}
                         onDrop={() => handleDrop(index)}
                         className={`bg-slate-950 border rounded-2xl p-4 flex flex-col md:flex-row items-center gap-5 transition-all relative ${
@@ -849,15 +869,15 @@ export default function Home() {
                           {/* Location details */}
                           <div>
                             <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1">Locación / Detalles</label>
-                            <input 
-                              type="text"
+                            <textarea 
                               value={photo.location}
                               placeholder="Ubicación"
                               onChange={(e) => {
                                 const val = e.target.value;
                                 setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, location: val } : p));
                               }}
-                              className="w-full bg-slate-900 border border-slate-850 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-red-600 transition-colors"
+                              rows={2}
+                              className="w-full bg-slate-900 border border-slate-850 rounded-xl px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-red-600 transition-colors resize-y min-h-[46px] leading-normal"
                             />
                           </div>
 
@@ -877,14 +897,14 @@ export default function Home() {
                                 </button>
                               )}
                             </label>
-                            <input 
-                              type="datetime-local"
+                            <DateTimePicker 
                               value={parseDateStringToInput(photo.date)}
-                              onChange={(e) => {
-                                const val = parseInputToDateString(e.target.value);
-                                setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, date: val } : p));
+                              onChange={(val) => {
+                                const formattedVal = parseInputToDateString(val);
+                                setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, date: formattedVal } : p));
                               }}
-                              className="w-full bg-slate-900 border border-slate-850 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-red-600 transition-colors"
+                              className="!px-2.5 !py-1.5 !text-xs !bg-slate-900 border-slate-850"
+                              placeholder="Fecha"
                             />
                           </div>
 

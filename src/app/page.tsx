@@ -16,7 +16,6 @@ import {
   Eye, 
   Info, 
   RefreshCw,
-  Sparkles,
   Sun,
   Moon
 } from 'lucide-react';
@@ -99,6 +98,7 @@ export default function Home() {
     const storedTheme = localStorage.getItem('theme');
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     const currentTheme = storedTheme || systemTheme;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(currentTheme as 'light' | 'dark');
     
     // Set class on root element
@@ -566,11 +566,11 @@ export default function Home() {
       <aside className="w-64 bg-sidebar-bg border-r border-border-main flex flex-col shrink-0 transition-colors duration-200">
         <div className="p-6 border-b border-border-main flex items-center gap-3">
           <div className="bg-red-600 text-white p-2 rounded-lg font-bold shadow-md shadow-red-900/30 flex items-center justify-center">
-            <Sparkles size={20} className="text-white" />
+            <MapPin size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="font-bold text-lg leading-tight tracking-wide">Marca de Agua</h1>
-            <span className="text-xs text-text-muted">Pro Studio (Local)</span>
+            <h1 className="font-bold text-lg leading-tight tracking-wide">GeoStamp Pro</h1>
+            <span className="text-xs text-text-muted">Local Metadata Studio</span>
           </div>
         </div>
 

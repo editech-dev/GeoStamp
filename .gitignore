@@ -45,3 +45,12 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# local agent rules
+AGENTS.md
+CLAUDE.md
+
+# sensitive / raw image files
+/*.png
+/*.jpg
+/*.jpeg

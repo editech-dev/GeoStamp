@@ -49,12 +49,12 @@ test.describe('Watermark Application E2E Tests', () => {
 
     // 2. Upload a test photo
     const fileInput = page.locator('input[type="file"][multiple]');
-    const testFilePath = path.join(__dirname, '..', 'WhatsApp Image 2026-05-28 at 11.08.54 AM.jpeg');
+    const testFilePath = path.join(__dirname, 'sample-test.jpg');
     await fileInput.setInputFiles(testFilePath);
 
     // Verify photo is loaded into the queue
     const photoQueue = page.locator('div.grid.grid-cols-1.gap-4').first();
-    await expect(photoQueue).toContainText('WhatsApp Image 2026-05-28 at 11.08.54 AM.jpeg');
+    await expect(photoQueue).toContainText('sample-test.jpg');
 
     // 3. Edit batch location and status
     const batchLocationInput = page.getByPlaceholder(/Ej\. CITRA DATACENTER/);

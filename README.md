@@ -1,5 +1,7 @@
 # GeoStamp Pro - Procesador de Fotos y Generador de Marca de Agua GPS
 
+**Sitio Web:** [https://geo-stamp.editech.dev/](https://geo-stamp.editech.dev/)
+
 GeoStamp Pro es una aplicación web moderna construida con **Next.js** que permite procesar lotes de fotografías, leer su metadata (incluyendo coordenadas GPS), aplicar diseños dinámicos de marcas de agua basados en la metadata e interpolación temporal, y descargar el lote resultante en un archivo ZIP.
 
 ## 🚀 Características Principales
@@ -62,6 +64,11 @@ Sigue estos pasos para configurar el proyecto localmente:
    ```bash
    pnpm run lint
    ```
+
+## 🌐 Despliegue y URL del Proyecto
+
+El proyecto está actualmente desplegado y funcionando en la siguiente dirección:
+- **Producción:** [https://geo-stamp.editech.dev/](https://geo-stamp.editech.dev/)
 
 ## 🧪 Pruebas Unitarias y E2E (Playwright)
 

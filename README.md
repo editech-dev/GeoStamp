@@ -1,6 +1,6 @@
-# MarcaAgua Pro - Procesador de Fotos y Generador de Marca de Agua
+# GeoStamp Pro - Procesador de Fotos y Generador de Marca de Agua GPS
 
-MarcaAgua Pro es una aplicación web moderna construida con **Next.js** que permite procesar lotes de fotografías, leer su metadata (incluyendo coordenadas GPS), aplicar diseños dinámicos de marcas de agua basados en la metadata e interpolación temporal, y descargar el lote resultante en un archivo ZIP.
+GeoStamp Pro es una aplicación web moderna construida con **Next.js** que permite procesar lotes de fotografías, leer su metadata (incluyendo coordenadas GPS), aplicar diseños dinámicos de marcas de agua basados en la metadata e interpolación temporal, y descargar el lote resultante en un archivo ZIP.
 
 ## 🚀 Características Principales
 

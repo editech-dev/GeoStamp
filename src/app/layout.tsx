@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Marca de Agua Pro | Procesador Local de Fotos",
+  title: "GeoStamp Pro | Procesador Local de Fotos con Marca de Agua GPS",
   description: "Procesador de fotos masivo con marca de agua personalizable y lectura de metadatos EXIF. Procesamiento 100% local en tu navegador.",
 };
 

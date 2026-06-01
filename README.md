@@ -8,7 +8,7 @@ GeoStamp Pro es una aplicación web moderna construida con **Next.js** que permi
 
 - **Procesamiento por Lotes:** Sube múltiples fotos simultáneamente.
 - **Detección de Metadata EXIF:** Lee automáticamente la fecha, hora y coordenadas GPS (latitud/longitud) de las fotografías.
-- **Selector de Fecha y Hora Personalizado (`DateTimePicker`):** Reemplazo de los selectores nativos del navegador por un componente React personalizado de alto contraste, adaptado al tema oscuro y acentos rojos del sitio. Contiene navegación de calendario mensual y controles para ajustar hora y minutos.
+- **Selector de Fecha y Hora Personalizado (`DateTimePicker`):** Reemplazo de los selectores nativos del navegador por un componente React personalizado de alto contraste, adaptado al tema oscuro y acentos rojos del sitio. Contiene navegación de calendario mensual y controles para ajustar hora y minutos, adaptándose de forma responsiva como modal centrado en móviles y popover en escritorio para una interacción táctil óptima.
 - **Interpolación de Fechas:** 
   - Si una foto no posee fecha en su metadata, se puede interpolar automáticamente basándose en las fotos vecinas.
   - Permite configurar un rango de fechas manual (Inicio y Fin) y recalcular proporcionalmente la fecha y hora de todo el lote.
@@ -20,7 +20,7 @@ GeoStamp Pro es una aplicación web moderna construida con **Next.js** que permi
   - **Ubicación del Logo:** Coloca el logo en la parte superior o inferior, alineado a la izquierda o derecha.
   - **Estilos de Diseño:** Soporte para diseño tipo "Plain Text" (Estilo A) y "Caja Compacta con Borde" (Estilo B), respetando las proporciones visuales. El estilo A oculta decoradores visuales y muestra el estado en texto plano.
   - **Datos del GPS:** Activa o desactiva la visibilidad de las coordenadas GPS y edítalas manualmente de ser necesario.
-- **Ordenamiento Estable y Reactivo (Drag & Drop):** Posibilidad de reordenar las imágenes mediante arrastre directo o botones de subir/bajar. El sistema incluye un manejador `onDragEnd` para evitar elementos marcados persistentemente de forma errónea al cancelar arrastres.
+- **Ordenamiento Estable y Reactivo (Drag & Drop):** Posibilidad de reordenar las imágenes mediante arrastre directo o botones de subir/bajar. El sistema incluye un manejador `onDragEnd` para evitar elementos marcados persistentemente de forma errónea al cancelar arrastres, optimizado para celulares con botones táctiles dedicados.
 - **Vista Previa en Tiempo Real:** Modal interactivo para visualizar el lienzo de la foto con la marca de agua renderizada antes de descargar.
 - **Exportación Segura:** Generación de un archivo comprimido ZIP con todas las imágenes procesadas en alta definición y con su marca de agua integrada.
 

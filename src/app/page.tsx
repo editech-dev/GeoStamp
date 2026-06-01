@@ -17,7 +17,11 @@ import {
   Info, 
   RefreshCw,
   Sun,
-  Moon
+  Moon,
+  Menu,
+  X,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import exifr from 'exifr';
 import JSZip from 'jszip';
@@ -89,6 +93,12 @@ function parseInputToDateString(val: string): string {
 export default function Home() {
   // Navigation active tab
   const [activeTab, setActiveTab] = useState<'processor' | 'config'>('processor');
+
+  // Mobile menu/sidebar drawer state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+
+  // Expanded photo items in mobile queue list
+  const [expandedPhotos, setExpandedPhotos] = useState<Record<string, boolean>>({});
 
   // Theme state: 'light' | 'dark'
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
@@ -433,11 +443,19 @@ export default function Home() {
   const handleResetProcessor = () => {
     photos.forEach(photo => URL.revokeObjectURL(photo.previewUrl));
     setPhotos([]);
+    setExpandedPhotos({});
     setBatchStatus('Antes del Mantenimiento');
     setBatchLocation('');
     setStartDateRange('');
     setEndDateRange('');
     setUseMetadata(true);
+  };
+
+  const togglePhotoExpand = (id: string) => {
+    setExpandedPhotos(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
   };
 
   // Single Photo Watermark Preview
@@ -560,24 +578,47 @@ export default function Home() {
     config.textPosition === pos;
 
   return (
-    <div className="flex flex-1 min-h-screen bg-app-bg text-text-main font-sans transition-colors duration-200">
+    <div className="flex flex-1 min-h-screen bg-app-bg text-text-main font-sans transition-colors duration-200 relative">
       
-      {/* SIDEBAR NAVIGATION */}
-      <aside className="w-64 bg-sidebar-bg border-r border-border-main flex flex-col shrink-0 transition-colors duration-200">
-        <div className="p-6 border-b border-border-main flex items-center gap-3">
-          <div className="bg-red-600 text-white p-2 rounded-lg font-bold shadow-md shadow-red-900/30 flex items-center justify-center">
-            <MapPin size={20} className="text-white" />
+      {/* SIDEBAR NAVIGATION - DESKTOP & MOBILE DRAWER */}
+      {/* Backdrop for mobile drawer */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden animate-in fade-in duration-200"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+      
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-sidebar-bg border-r border-border-main flex flex-col shrink-0 transition-transform duration-300 md:static md:translate-x-0 ${
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="p-6 border-b border-border-main flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="bg-red-600 text-white p-2 rounded-lg font-bold shadow-md shadow-red-900/30 flex items-center justify-center">
+              <MapPin size={20} className="text-white" />
+            </div>
+            <div>
+              <h1 className="font-bold text-lg leading-tight tracking-wide">GeoStamp Pro</h1>
+              <span className="text-xs text-text-muted">Local Metadata Studio</span>
+            </div>
           </div>
-          <div>
-            <h1 className="font-bold text-lg leading-tight tracking-wide">GeoStamp Pro</h1>
-            <span className="text-xs text-text-muted">Local Metadata Studio</span>
-          </div>
+          {/* Close button inside mobile menu */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="p-1.5 rounded-lg text-text-muted hover:text-text-main hover:bg-panel-active md:hidden transition-colors"
+            aria-label="Cerrar menú"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
           <p className="text-xs font-semibold text-text-muted/70 uppercase px-3 mb-2 tracking-wider">Principal</p>
           <button 
-            onClick={() => setActiveTab('processor')}
+            onClick={() => {
+              setActiveTab('processor');
+              setIsMobileMenuOpen(false);
+            }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
               activeTab === 'processor' 
                 ? 'bg-red-600 text-white shadow-md shadow-red-600/10' 
@@ -590,7 +631,10 @@ export default function Home() {
           
           <p className="text-xs font-semibold text-text-muted/70 uppercase px-3 mt-6 mb-2 tracking-wider">Consola Admin</p>
           <button 
-            onClick={() => setActiveTab('config')}
+            onClick={() => {
+              setActiveTab('config');
+              setIsMobileMenuOpen(false);
+            }}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-sm font-medium ${
               activeTab === 'config' 
                 ? 'bg-red-600 text-white shadow-md shadow-red-600/10' 
@@ -611,42 +655,52 @@ export default function Home() {
 
       {/* MAIN CONTAINER */}
       <main className="flex-1 flex flex-col min-w-0 bg-app-bg overflow-y-auto transition-colors duration-200">
-        <header className="h-20 bg-header-bg border-b border-border-main flex items-center justify-between px-8 shrink-0 transition-colors duration-200">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl font-bold tracking-tight">
+        <header className="h-20 bg-header-bg border-b border-border-main flex items-center justify-between px-4 md:px-8 shrink-0 transition-colors duration-200">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Hamburger menu trigger */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 -ml-1 rounded-xl border border-border-main bg-input-bg text-text-muted hover:text-text-main transition-colors md:hidden shrink-0 cursor-pointer"
+              aria-label="Abrir menú"
+            >
+              <Menu size={20} />
+            </button>
+            
+            <h2 className="text-base sm:text-lg md:text-xl font-bold tracking-tight truncate">
               {activeTab === 'processor' ? 'Carga y Edición de Fotos' : 'Ajustes Visuales y Marca de Agua'}
             </h2>
             {activeTab === 'processor' && photos.length > 0 && (
-              <span className="bg-red-950/50 text-red-400 border border-red-900/50 text-xs px-2.5 py-1 rounded-full font-semibold">
-                {photos.length} foto{photos.length !== 1 ? 's' : ''} cargada{photos.length !== 1 ? 's' : ''}
+              <span className="bg-red-950/50 text-red-400 border border-red-900/50 text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-semibold shrink-0">
+                {photos.length} <span className="hidden sm:inline">foto{photos.length !== 1 ? 's' : ''}</span>
               </span>
             )}
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl border border-border-main bg-input-bg text-text-muted hover:text-text-main transition-colors cursor-pointer focus:outline-none focus:border-red-600"
+              className="p-2 sm:p-2.5 rounded-xl border border-border-main bg-input-bg text-text-muted hover:text-text-main transition-colors cursor-pointer focus:outline-none focus:border-red-600"
               aria-label="Cambiar tema"
               title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+              {theme === 'dark' ? <Sun size={16} className="sm:w-[18px] sm:h-[18px]" /> : <Moon size={16} className="sm:w-[18px] sm:h-[18px]" />}
             </button>
             {activeTab === 'processor' && photos.length > 0 && (
               <button
                 onClick={handleProcessAll}
                 disabled={isProcessing}
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-emerald-950/20 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-1.5 sm:gap-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl font-semibold shadow-lg shadow-emerald-950/20 disabled:opacity-50 transition-colors text-xs sm:text-sm cursor-pointer"
               >
-                <Download size={18} />
-                Procesar y Descargar ZIP
+                <Download size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <span className="hidden sm:inline">Procesar y Descargar ZIP</span>
+                <span className="inline sm:hidden">Procesar</span>
               </button>
             )}
           </div>
         </header>
 
         {/* CONTAINER CONTENT */}
-        <div className="p-8 max-w-7xl mx-auto w-full flex-1 flex flex-col gap-8">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1 flex flex-col gap-8">
           
           {/* TAB 1: PROCESSOR / WORKFLOW */}
           {activeTab === 'processor' && (
@@ -736,10 +790,10 @@ export default function Home() {
                   </div>
                   
                   {/* Selector Mode Toggle */}
-                  <div className="flex bg-input-bg p-1.5 rounded-2xl border border-border-main shrink-0 self-start md:self-center">
+                  <div className="flex w-full md:w-auto bg-input-bg p-1 rounded-xl border border-border-main shrink-0 self-stretch md:self-center">
                     <button
                       onClick={() => handleToggleMetadata(true)}
-                      className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      className={`flex-1 md:flex-initial text-center px-3 md:px-5 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all cursor-pointer ${
                         useMetadata 
                           ? 'bg-red-600 text-white shadow-md' 
                           : 'text-text-muted hover:text-text-main'
@@ -749,7 +803,7 @@ export default function Home() {
                     </button>
                     <button
                       onClick={() => handleToggleMetadata(false)}
-                      className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      className={`flex-1 md:flex-initial text-center px-3 md:px-5 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all cursor-pointer ${
                         !useMetadata 
                           ? 'bg-red-600 text-white shadow-md' 
                           : 'text-text-muted hover:text-text-main'
@@ -818,182 +872,361 @@ export default function Home() {
                   </div>
 
                   <div className="grid grid-cols-1 gap-4">
-                    {photos.map((photo, index) => (
-                      <div 
-                        key={photo.id}
-                        draggable
-                        onDragStart={() => handleDragStart(index)}
-                        onDragEnd={() => setDraggedIndex(null)}
-                        onDragOver={handleDragOver}
-                        onDrop={() => handleDrop(index)}
-                        className={`bg-card-bg border rounded-2xl p-4 flex flex-col md:flex-row items-center gap-5 transition-all relative ${
-                          draggedIndex === index 
-                            ? 'border-red-600 bg-red-950/5 opacity-50 scale-[0.98]' 
-                            : 'border-border-main hover:border-text-subtle'
-                        }`}
-                      >
-                        {/* Drag Handle & Ordering Tools */}
-                        <div className="flex md:flex-col items-center gap-2 shrink-0 text-text-muted">
-                          <button 
-                            onClick={() => movePhoto(index, 'up')}
-                            disabled={index === 0}
-                            className="p-1.5 bg-input-bg border border-border-main rounded-lg hover:text-text-main disabled:opacity-30 disabled:hover:text-text-muted transition-colors"
-                            title="Subir posición"
-                          >
-                            <ArrowUp size={14} />
-                          </button>
-                          
-                          {/* Drag visual indicator */}
-                          <div 
-                            className="cursor-grab active:cursor-grabbing px-2 py-1 bg-input-bg border border-border-main rounded-lg font-mono text-xs font-bold text-text-muted"
-                            title="Arrastra para reordenar"
-                          >
-                            {index + 1}
-                          </div>
-
-                          <button 
-                            onClick={() => movePhoto(index, 'down')}
-                            disabled={index === photos.length - 1}
-                            className="p-1.5 bg-input-bg border border-border-main rounded-lg hover:text-text-main disabled:opacity-30 disabled:hover:text-text-muted transition-colors"
-                            title="Bajar posición"
-                          >
-                            <ArrowDown size={14} />
-                          </button>
-                        </div>
-
-                        {/* Image Preview Thumbnail */}
-                        <div className="relative w-36 h-24 rounded-lg bg-input-bg border border-border-main overflow-hidden shrink-0 group/img">
-                          <img 
-                            src={photo.previewUrl} 
-                            alt={photo.file.name}
-                            className="w-full h-full object-cover transition-transform group-hover/img:scale-105"
-                          />
-                          <button
-                            onClick={() => handlePreviewPhoto(photo)}
-                            className="absolute inset-0 bg-card-bg/70 opacity-0 group-hover/img:opacity-100 flex items-center justify-center gap-1.5 text-text-main text-xs font-semibold transition-opacity duration-200"
-                          >
-                            <Eye size={14} />
-                            Ver Previa
-                          </button>
-                        </div>
-
-                        {/* Config columns */}
-                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                          
-                          {/* File Details */}
-                          <div className="space-y-1">
-                            <span className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider">Nombre del Archivo</span>
-                            <p className="text-sm font-semibold text-text-main truncate max-w-[200px]" title={photo.file.name}>
-                              {photo.file.name}
-                            </p>
-                            <span className="block text-[11px] text-text-muted">
-                              {(photo.file.size / (1024 * 1024)).toFixed(2)} MB
-                            </span>
-                          </div>
-
-                          {/* Phase/Status */}
-                          <div>
-                            <label className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1">Estado / Grupo</label>
-                            <select 
-                              value={photo.status}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, status: val } : p));
-                              }}
-                              className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors"
-                            >
-                              <option value="Antes del Mantenimiento">Antes del Mantenimiento</option>
-                              <option value="Durante el Mantenimiento">Durante el Mantenimiento</option>
-                              <option value="Después del Mantenimiento">Después del Mantenimiento</option>
-                              <option value="">Ninguno</option>
-                            </select>
-                          </div>
-
-                          {/* Location details */}
-                          <div>
-                            <label className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1">Locación / Detalles</label>
-                            <textarea 
-                              value={photo.location}
-                              placeholder="Ubicación"
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, location: val } : p));
-                              }}
-                              rows={2}
-                              className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors resize-y min-h-[46px] leading-normal"
-                            />
-                          </div>
-
-                          {/* Date and Time */}
-                          <div>
-                            <label className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1 flex justify-between">
-                              <span>Fecha y Hora</span>
-                              {photo.date !== photo.originalMetadata.date && (
-                                <button
-                                  onClick={() => {
-                                    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, date: p.originalMetadata.date } : p));
-                                  }}
-                                  className="text-[10px] text-text-muted hover:text-red-500 font-bold transition-colors"
-                                  title="Restaurar metadata EXIF"
-                                >
-                                  Reset
-                                </button>
-                              )}
-                            </label>
-                            <DateTimePicker 
-                              value={parseDateStringToInput(photo.date)}
-                              onChange={(val) => {
-                                const formattedVal = parseInputToDateString(val);
-                                setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, date: formattedVal } : p));
-                              }}
-                              className="!px-2.5 !py-1.5 !text-xs !bg-input-bg border-border-subtle"
-                              placeholder="Fecha"
-                            />
-                          </div>
-
-                        </div>
-
-                        {/* GPS Coords inputs */}
-                        <div className="flex flex-row md:flex-col gap-2 shrink-0 w-full md:w-36">
-                          <div className="w-1/2 md:w-full">
-                            <label className="block text-[9px] font-semibold text-text-muted uppercase mb-0.5">Latitud</label>
-                            <input 
-                              type="text"
-                              value={photo.lat}
-                              placeholder="0.000000"
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, lat: val } : p));
-                              }}
-                              className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors"
-                            />
-                          </div>
-                          <div className="w-1/2 md:w-full">
-                            <label className="block text-[9px] font-semibold text-text-muted uppercase mb-0.5">Longitud</label>
-                            <input 
-                              type="text"
-                              value={photo.lng}
-                              placeholder="0.000000"
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, lng: val } : p));
-                              }}
-                              className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Delete action */}
-                        <button
-                          onClick={() => deletePhoto(photo.id, photo.previewUrl)}
-                          className="p-2.5 bg-input-bg border border-border-main hover:border-red-950 text-text-muted hover:text-red-500 rounded-xl shrink-0 transition-colors cursor-pointer"
-                          title="Eliminar foto"
+                    {photos.map((photo, index) => {
+                      const isExpanded = !!expandedPhotos[photo.id];
+                      return (
+                        <div 
+                          key={photo.id}
+                          className="bg-card-bg border border-border-main rounded-2xl p-4 flex flex-col transition-all relative gap-3"
                         >
-                          <Trash2 size={16} />
-                        </button>
+                          {/* DESKTOP LAYOUT (HIDDEN ON MOBILE) */}
+                          <div 
+                            draggable
+                            onDragStart={() => handleDragStart(index)}
+                            onDragEnd={() => setDraggedIndex(null)}
+                            onDragOver={handleDragOver}
+                            onDrop={() => handleDrop(index)}
+                            className={`hidden md:flex flex-row items-center gap-5 w-full ${
+                              draggedIndex === index ? 'opacity-50 scale-[0.98]' : ''
+                            }`}
+                          >
+                            {/* Drag Handle & Ordering Tools */}
+                            <div className="flex flex-col items-center gap-2 shrink-0 text-text-muted">
+                              <button 
+                                onClick={() => movePhoto(index, 'up')}
+                                disabled={index === 0}
+                                className="p-1.5 bg-input-bg border border-border-main rounded-lg hover:text-text-main disabled:opacity-30 disabled:hover:text-text-muted transition-colors cursor-pointer"
+                                title="Subir posición"
+                              >
+                                <ArrowUp size={14} />
+                              </button>
+                              
+                              {/* Drag visual indicator */}
+                              <div 
+                                className="cursor-grab active:cursor-grabbing px-2 py-1 bg-input-bg border border-border-main rounded-lg font-mono text-xs font-bold text-text-muted"
+                                title="Arrastra para reordenar"
+                              >
+                                {index + 1}
+                              </div>
 
-                      </div>
-                    ))}
+                              <button 
+                                onClick={() => movePhoto(index, 'down')}
+                                disabled={index === photos.length - 1}
+                                className="p-1.5 bg-input-bg border border-border-main rounded-lg hover:text-text-main disabled:opacity-30 disabled:hover:text-text-muted transition-colors cursor-pointer"
+                                title="Bajar posición"
+                              >
+                                <ArrowDown size={14} />
+                              </button>
+                            </div>
+
+                            {/* Image Preview Thumbnail */}
+                            <div className="relative w-36 h-24 rounded-lg bg-input-bg border border-border-main overflow-hidden shrink-0 group/img">
+                              <img 
+                                src={photo.previewUrl} 
+                                alt={photo.file.name}
+                                className="w-full h-full object-cover transition-transform group-hover/img:scale-105"
+                              />
+                              <button
+                                onClick={() => handlePreviewPhoto(photo)}
+                                className="absolute inset-0 bg-card-bg/70 opacity-0 group-hover/img:opacity-100 flex items-center justify-center gap-1.5 text-text-main text-xs font-semibold transition-opacity duration-200 cursor-pointer"
+                              >
+                                <Eye size={14} />
+                                Ver Previa
+                              </button>
+                            </div>
+
+                            {/* Config columns */}
+                            <div className="flex-1 grid grid-cols-4 gap-4 w-full">
+                              
+                              {/* File Details */}
+                              <div className="space-y-1">
+                                <span className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider">Nombre del Archivo</span>
+                                <p className="text-sm font-semibold text-text-main truncate max-w-[150px] lg:max-w-[200px]" title={photo.file.name}>
+                                  {photo.file.name}
+                                </p>
+                                <span className="block text-[11px] text-text-muted">
+                                  {(photo.file.size / (1024 * 1024)).toFixed(2)} MB
+                                </span>
+                              </div>
+
+                              {/* Phase/Status */}
+                              <div>
+                                <label className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1">Estado / Grupo</label>
+                                <select 
+                                  value={photo.status}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, status: val } : p));
+                                  }}
+                                  className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors cursor-pointer"
+                                >
+                                  <option value="Antes del Mantenimiento">Antes del Mantenimiento</option>
+                                  <option value="Durante el Mantenimiento">Durante el Mantenimiento</option>
+                                  <option value="Después del Mantenimiento">Después del Mantenimiento</option>
+                                  <option value="">Ninguno</option>
+                                </select>
+                              </div>
+
+                              {/* Location details */}
+                              <div>
+                                <label className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1">Locación / Detalles</label>
+                                <textarea 
+                                  value={photo.location}
+                                  placeholder="Ubicación"
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, location: val } : p));
+                                  }}
+                                  rows={2}
+                                  className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors resize-y min-h-[46px] leading-normal"
+                                />
+                              </div>
+
+                              {/* Date and Time */}
+                              <div>
+                                <label className="block text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1 flex justify-between">
+                                  <span>Fecha y Hora</span>
+                                  {photo.date !== photo.originalMetadata.date && (
+                                    <button
+                                      onClick={() => {
+                                        setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, date: p.originalMetadata.date } : p));
+                                      }}
+                                      className="text-[10px] text-text-muted hover:text-red-500 font-bold transition-colors cursor-pointer"
+                                      title="Restaurar metadata EXIF"
+                                    >
+                                      Reset
+                                    </button>
+                                  )}
+                                </label>
+                                <DateTimePicker 
+                                  value={parseDateStringToInput(photo.date)}
+                                  onChange={(val) => {
+                                    const formattedVal = parseInputToDateString(val);
+                                    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, date: formattedVal } : p));
+                                  }}
+                                  className="!px-2.5 !py-1.5 !text-xs !bg-input-bg border-border-subtle"
+                                  placeholder="Fecha"
+                                />
+                              </div>
+
+                            </div>
+
+                            {/* GPS Coords inputs */}
+                            <div className="flex flex-col gap-2 shrink-0 w-36">
+                              <div>
+                                <label className="block text-[9px] font-semibold text-text-muted uppercase mb-0.5">Latitud</label>
+                                <input 
+                                  type="text"
+                                  value={photo.lat}
+                                  placeholder="0.000000"
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, lat: val } : p));
+                                  }}
+                                  className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9px] font-semibold text-text-muted uppercase mb-0.5">Longitud</label>
+                                <input 
+                                  type="text"
+                                  value={photo.lng}
+                                  placeholder="0.000000"
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, lng: val } : p));
+                                  }}
+                                  className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors"
+                                />
+                              </div>
+                            </div>
+
+                            {/* Delete action */}
+                            <button
+                              onClick={() => deletePhoto(photo.id, photo.previewUrl)}
+                              className="p-2.5 bg-input-bg border border-border-main hover:border-red-950 text-text-muted hover:text-red-500 rounded-xl shrink-0 transition-colors cursor-pointer"
+                              title="Eliminar foto"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+
+                          {/* MOBILE LAYOUT (HIDDEN ON DESKTOP) */}
+                          <div className="flex md:hidden flex-col gap-3 w-full">
+                            {/* Mobile Header Row */}
+                            <div className="flex items-center gap-3 w-full">
+                              {/* Position Indicator Badge */}
+                              <div className="px-2 py-1 bg-input-bg border border-border-main rounded-lg font-mono text-xs font-bold text-text-muted shrink-0">
+                                {index + 1}
+                              </div>
+
+                              {/* Small Thumbnail preview */}
+                              <div className="relative w-16 h-12 rounded-lg bg-input-bg border border-border-main overflow-hidden shrink-0">
+                                <img 
+                                  src={photo.previewUrl} 
+                                  alt={photo.file.name}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+
+                              {/* Filename & size */}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-text-main truncate" title={photo.file.name}>
+                                  {photo.file.name}
+                                </p>
+                                <span className="block text-[10px] text-text-muted">
+                                  {(photo.file.size / (1024 * 1024)).toFixed(2)} MB
+                                </span>
+                              </div>
+
+                              {/* Ordering Arrows for Touch Screens */}
+                              <div className="flex items-center gap-1 shrink-0 text-text-muted">
+                                <button 
+                                  onClick={() => movePhoto(index, 'up')}
+                                  disabled={index === 0}
+                                  className="p-1 bg-input-bg border border-border-main rounded-lg hover:text-text-main disabled:opacity-30 disabled:hover:text-text-muted transition-colors cursor-pointer"
+                                  title="Subir"
+                                >
+                                  <ArrowUp size={14} />
+                                </button>
+                                <button 
+                                  onClick={() => movePhoto(index, 'down')}
+                                  disabled={index === photos.length - 1}
+                                  className="p-1 bg-input-bg border border-border-main rounded-lg hover:text-text-main disabled:opacity-30 disabled:hover:text-text-muted transition-colors cursor-pointer"
+                                  title="Bajar"
+                                >
+                                  <ArrowDown size={14} />
+                                </button>
+                              </div>
+
+                              {/* Quick Delete */}
+                              <button
+                                onClick={() => deletePhoto(photo.id, photo.previewUrl)}
+                                className="p-2 bg-input-bg border border-border-main hover:border-red-950 text-text-muted hover:text-red-500 rounded-xl shrink-0 transition-colors cursor-pointer"
+                                title="Eliminar foto"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+
+                            {/* Action Buttons: Expand details, View preview */}
+                            <div className="flex gap-2 w-full mt-1">
+                              <button
+                                onClick={() => togglePhotoExpand(photo.id)}
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-input-bg hover:bg-panel-active border border-border-main rounded-xl text-xs font-semibold text-text-main transition-colors cursor-pointer"
+                              >
+                                {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                <span>{isExpanded ? 'Ocultar Detalles' : 'Editar Detalles'}</span>
+                              </button>
+
+                              <button
+                                onClick={() => handlePreviewPhoto(photo)}
+                                className="flex items-center justify-center gap-1.5 py-2 px-4 bg-input-bg hover:bg-panel-active border border-border-main rounded-xl text-xs font-semibold text-text-main transition-colors cursor-pointer"
+                              >
+                                <Eye size={14} />
+                                <span>Ver Previa</span>
+                              </button>
+                            </div>
+
+                            {/* Collapsible details section */}
+                            {isExpanded && (
+                              <div className="border-t border-border-subtle pt-3 mt-1 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                                {/* Phase/Status */}
+                                <div>
+                                  <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Estado / Grupo</label>
+                                  <select 
+                                    value={photo.status}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, status: val } : p));
+                                    }}
+                                    className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-2 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors"
+                                  >
+                                    <option value="Antes del Mantenimiento">Antes del Mantenimiento</option>
+                                    <option value="Durante el Mantenimiento">Durante el Mantenimiento</option>
+                                    <option value="Después del Mantenimiento">Después del Mantenimiento</option>
+                                    <option value="">Ninguno</option>
+                                  </select>
+                                </div>
+
+                                {/* Location details */}
+                                <div>
+                                  <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Locación / Detalles</label>
+                                  <textarea 
+                                    value={photo.location}
+                                    placeholder="Ubicación"
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, location: val } : p));
+                                    }}
+                                    rows={2}
+                                    className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors resize-y min-h-[46px] leading-normal"
+                                  />
+                                </div>
+
+                                {/* Date and Time */}
+                                <div>
+                                  <label className="block text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1 flex justify-between">
+                                    <span>Fecha y Hora</span>
+                                    {photo.date !== photo.originalMetadata.date && (
+                                      <button
+                                        onClick={() => {
+                                          setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, date: p.originalMetadata.date } : p));
+                                        }}
+                                        className="text-[10px] text-text-muted hover:text-red-500 font-bold transition-colors cursor-pointer"
+                                        title="Restaurar metadata EXIF"
+                                      >
+                                        Restaurar EXIF
+                                      </button>
+                                    )}
+                                  </label>
+                                  <DateTimePicker 
+                                    value={parseDateStringToInput(photo.date)}
+                                    onChange={(val) => {
+                                      const formattedVal = parseInputToDateString(val);
+                                      setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, date: formattedVal } : p));
+                                    }}
+                                    className="!px-2.5 !py-2 !text-xs !bg-input-bg border-border-subtle"
+                                    placeholder="Fecha"
+                                  />
+                                </div>
+
+                                {/* GPS Coords */}
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="block text-[9px] font-bold text-text-muted uppercase mb-0.5">Latitud</label>
+                                    <input 
+                                      type="text"
+                                      value={photo.lat}
+                                      placeholder="0.000000"
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, lat: val } : p));
+                                      }}
+                                      className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[9px] font-bold text-text-muted uppercase mb-0.5">Longitud</label>
+                                    <input 
+                                      type="text"
+                                      value={photo.lng}
+                                      placeholder="0.000000"
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, lng: val } : p));
+                                      }}
+                                      className="w-full bg-input-bg border border-border-subtle rounded-xl px-2.5 py-1.5 text-xs text-text-main focus:outline-none focus:border-red-600 transition-colors"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               ) : (
@@ -1355,12 +1588,12 @@ export default function Home() {
 
       {/* PREVIEW MODAL */}
       {previewPhoto && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 z-50">
-          <div className="bg-card-bg border border-border-main rounded-3xl w-full max-w-4xl flex flex-col max-h-[90vh] overflow-hidden shadow-2xl relative">
-            <header className="px-6 py-4 border-b border-border-main flex justify-between items-center bg-card-bg">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-6 z-50 animate-in fade-in duration-200">
+          <div className="bg-card-bg border border-border-main rounded-3xl w-full max-w-4xl flex flex-col max-h-[95vh] md:max-h-[90vh] overflow-hidden shadow-2xl relative">
+            <header className="px-4 md:px-6 py-4 border-b border-border-main flex justify-between items-center bg-card-bg">
               <div>
-                <h3 className="font-bold text-text-main">Previsualización de Marca de Agua</h3>
-                <p className="text-xs text-text-muted truncate max-w-[400px]">
+                <h3 className="font-bold text-text-main text-sm md:text-base">Previsualización de Marca de Agua</h3>
+                <p className="text-xs text-text-muted truncate max-w-[200px] sm:max-w-[400px]">
                   {previewPhoto.file.name}
                 </p>
               </div>
@@ -1372,7 +1605,7 @@ export default function Home() {
               </button>
             </header>
 
-            <div className="flex-1 bg-app-bg p-6 flex items-center justify-center min-h-[300px] overflow-auto">
+            <div className="flex-1 bg-app-bg p-4 md:p-6 flex items-center justify-center min-h-[250px] overflow-auto">
               {isPreviewLoading ? (
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-10 h-10 border-4 border-red-600/30 border-t-red-600 rounded-full animate-spin"></div>
@@ -1383,13 +1616,13 @@ export default function Home() {
                   <img 
                     src={previewImageSrc} 
                     alt="Watermark preview"
-                    className="max-w-full max-h-[60vh] object-contain rounded-xl border border-border-main shadow-lg"
+                    className="max-w-full max-h-[45vh] md:max-h-[60vh] object-contain rounded-xl border border-border-main shadow-lg"
                   />
                 )
               )}
             </div>
 
-            <footer className="px-6 py-4 border-t border-border-main flex justify-end gap-3 bg-card-bg">
+            <footer className="px-4 md:px-6 py-4 border-t border-border-main flex justify-end gap-3 bg-card-bg">
               <button 
                 onClick={closePreview}
                 className="px-5 py-2.5 bg-input-bg hover:bg-panel-active text-text-main rounded-xl border border-border-main text-sm font-semibold transition-colors cursor-pointer"

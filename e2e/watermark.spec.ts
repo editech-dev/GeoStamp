@@ -91,7 +91,10 @@ test.describe('Watermark Application E2E Tests', () => {
 
     // Verify that the photo's date in the queue has changed to the start date (since there's only 1 photo)
     const photoDateButton = photoCard.locator('button').filter({ hasText: /\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/ });
-    await expect(photoDateButton).toContainText('28/05/2026 08:00');
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const expectedDateStr = `28/${pad(now.getMonth() + 1)}/${now.getFullYear()} 08:00`;
+    await expect(photoDateButton).toContainText(expectedDateStr);
 
     // 5. Navigate to "Configuración Visual" Tab and adjust settings
     await page.getByRole('button', { name: 'Configuración Visual' }).click();

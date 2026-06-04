@@ -190,10 +190,13 @@ export async function renderWatermark(
     const isRightAligned = config.textPosition === 'top-right' || config.textPosition === 'bottom-right';
     const isBottomAligned = config.textPosition === 'bottom-left' || config.textPosition === 'bottom-right';
 
+    const fontFamily = config.fontFamily || 'system-ui, -apple-system, sans-serif';
+
     if (config.watermarkStyle === 'plain') {
       // Style A (Plain Text with Shadow)
       const baseFontSize = Math.max(14, Math.floor(imageMinDim * 0.02 * sizeScalar));
-      ctx.font = `500 ${baseFontSize}px system-ui, -apple-system, sans-serif`;
+      const weight = config.fontBold ? 'bold' : 'normal';
+      ctx.font = `${weight} ${baseFontSize}px ${fontFamily}`;
       ctx.fillStyle = '#ffffff';
       ctx.textBaseline = 'top';
       ctx.textAlign = isRightAligned ? 'right' : 'left';
@@ -228,10 +231,10 @@ export async function renderWatermark(
       const borderAccentWidth = Math.max(3, Math.floor(imageMinDim * 0.005));
 
       // Calculate width and height of the card
-      ctx.font = `600 ${titleFontSize}px system-ui, -apple-system, sans-serif`;
+      ctx.font = `600 ${titleFontSize}px ${fontFamily}`;
       const titleWidth = ctx.measureText(lines[0]).width;
 
-      ctx.font = `400 ${baseFontSize}px system-ui, -apple-system, sans-serif`;
+      ctx.font = `400 ${baseFontSize}px ${fontFamily}`;
       let maxDetailWidth = 0;
       for (let i = 1; i < lines.length; i++) {
         const w = ctx.measureText(lines[i]).width;
@@ -264,8 +267,8 @@ export async function renderWatermark(
       lines.forEach((line, i) => {
         const isTitle = i === 0;
         ctx.font = isTitle 
-          ? `bold ${titleFontSize}px system-ui, -apple-system, sans-serif` 
-          : `500 ${baseFontSize}px system-ui, -apple-system, sans-serif`;
+          ? `bold ${titleFontSize}px ${fontFamily}` 
+          : `500 ${baseFontSize}px ${fontFamily}`;
         
         ctx.fillStyle = isTitle ? '#ffffff' : '#e4e4e7'; // Title white, text zinc-200
         ctx.fillText(line, textStartX, textStartY + i * lineHeight);

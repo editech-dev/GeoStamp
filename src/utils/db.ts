@@ -11,6 +11,8 @@ export interface AppConfig {
   showDateTime: boolean;
   watermarkStyle: 'plain' | 'card';
   activeLogoId: string | null;
+  fontFamily: string;
+  fontBold: boolean;
 }
 
 export interface LogoRecord {
@@ -28,6 +30,8 @@ const DEFAULT_CONFIG: AppConfig = {
   showDateTime: true,
   watermarkStyle: 'card',
   activeLogoId: null,
+  fontFamily: 'system-ui, -apple-system, sans-serif',
+  fontBold: true,
 };
 
 function openDB(): Promise<IDBDatabase> {
@@ -58,7 +62,14 @@ export async function getConfig(): Promise<AppConfig> {
       const request = store.get('app_config');
 
       request.onsuccess = () => {
-        resolve(request.result || DEFAULT_CONFIG);
+        if (request.result) {
+          resolve({
+            ...DEFAULT_CONFIG,
+            ...request.result
+          });
+        } else {
+          resolve(DEFAULT_CONFIG);
+        }
       };
       request.onerror = () => {
         resolve(DEFAULT_CONFIG);

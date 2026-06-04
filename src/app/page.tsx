@@ -144,6 +144,8 @@ export default function Home() {
     showDateTime: true,
     watermarkStyle: 'card',
     activeLogoId: null,
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    fontBold: true,
   });
 
   // Logo list
@@ -1293,6 +1295,38 @@ export default function Home() {
                           type="checkbox"
                           checked={config.showDateTime}
                           onChange={(e) => handleSaveConfig({ ...config, showDateTime: e.target.checked })}
+                          className="w-10 h-5 bg-card-bg border border-border-main checked:bg-red-600 checked:border-red-600 rounded-full appearance-none relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-text-subtle checked:before:bg-white before:rounded-full before:top-[2px] before:left-[2px] checked:before:left-[22px] before:transition-all transition-colors duration-200"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Tipografía y Estilo de Fuente */}
+                    <div className="pt-4 border-t border-border-subtle grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-text-muted mb-1.5">
+                          Fuente del Texto
+                        </label>
+                        <select 
+                          value={config.fontFamily || 'system-ui, -apple-system, sans-serif'}
+                          onChange={(e) => handleSaveConfig({ ...config, fontFamily: e.target.value })}
+                          className="w-full bg-input-bg border border-border-main rounded-xl px-4 py-3 text-sm text-text-main focus:outline-none focus:border-red-600 transition-colors font-medium cursor-pointer"
+                        >
+                          <option value="system-ui, -apple-system, sans-serif">System UI (Por defecto)</option>
+                          <option value="Arial, sans-serif">Arial</option>
+                          <option value="Courier New, monospace">Courier New</option>
+                          <option value="Georgia, serif">Georgia</option>
+                        </select>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-input-bg/60 rounded-2xl border border-border-subtle">
+                        <div>
+                          <label className="text-sm font-semibold text-text-main block">Texto en Negrita</label>
+                          <span className="text-xs text-text-muted">Aplicar grosor al texto</span>
+                        </div>
+                        <input 
+                          type="checkbox"
+                          checked={config.fontBold}
+                          onChange={(e) => handleSaveConfig({ ...config, fontBold: e.target.checked })}
                           className="w-10 h-5 bg-card-bg border border-border-main checked:bg-red-600 checked:border-red-600 rounded-full appearance-none relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-text-subtle checked:before:bg-white before:rounded-full before:top-[2px] before:left-[2px] checked:before:left-[22px] before:transition-all transition-colors duration-200"
                         />
                       </div>
